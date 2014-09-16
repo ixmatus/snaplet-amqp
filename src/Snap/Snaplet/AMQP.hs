@@ -1,3 +1,76 @@
-module Snap.Snaplet.AMQP where
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies      #-}
 
-import Snap.Snaplet.AMQP.Internal
+module Snap.Snaplet.AMQP
+  ( initAMQP
+  , AmqpState
+  ) where
+
+import           Control.Monad.IO.Class
+import           Control.Monad.Reader
+import           Control.Monad.State        (gets)
+import           Control.Monad.Trans.Reader as R
+import           Data.Configurator
+import           Data.Configurator.Types
+import           Network.AMQP               (Channel, Connection, openChannel,
+                                             openConnection')
+import           Network.Socket             (PortNumber (..))
+import           Paths_snaplet_amqp
+import           Snap.Snaplet
+
+import           Snap.Snaplet.AMQP.Internal
+
+-------------------------------------------------------------------------------
+type AmqpC = (Connection, Channel)
+
+newtype AmqpState = AmqpState { persistAmqp :: AmqpC }
+
+-------------------------------------------------------------------------------
+-- | Implement this type class to have any monad work with snaplet-persistent.
+-- A default instance is provided for (Handler b PersistState).
+class MonadIO m => HasAmqpConn m where
+    getAmqpConn :: m AmqpC
+
+instance HasAmqpConn (Handler b AmqpState) where
+    getAmqpConn = gets persistAmqp
+
+instance MonadIO m => HasAmqpConn (ReaderT AmqpC m) where
+    getAmqpConn = R.ask
+
+-- | Initialize the AMQP Snaplet.
+initAMQP :: SnapletInit b AmqpState
+initAMQP = makeSnaplet "persist" description datadir $ do
+    c <- mkSnapletAmqpConn
+    return $ AmqpState c
+  where
+    description = "Snaplet for AMQP library"
+    datadir = Just $ liftM (++"/resources/amqp") getDataDir
+
+-------------------------------------------------------------------------------
+-- | Constructs a connection in a snaplet context.
+mkSnapletAmqpConn :: (MonadIO (m b v), MonadSnaplet m) => m b v AmqpC
+mkSnapletAmqpConn = do
+  conf <- getSnapletUserConfig
+  mkAmqpConn conf
+
+-------------------------------------------------------------------------------
+-- | Constructs a connect from Config.
+mkAmqpConn :: MonadIO m => Config -> m AmqpC
+mkAmqpConn conf = do
+  host  <- liftIO $ require conf "host"
+  port  <- liftIO $ require conf "port"
+  vhost <- liftIO $ require conf "vhost"
+  login <- liftIO $ require conf "login"
+  pass  <- liftIO $ require conf "password"
+
+  conn  <- liftIO $ openConnection' host (PortNum port) vhost login pass
+  chan  <- liftIO $ openChannel conn
+
+  return (conn, chan)
+
+-------------------------------------------------------------------------------
+-- | Runs an AMQP action in any monad with a HasAmqpConn instance.
+runAmqp :: (HasAmqpConn m) => (AmqpC -> b) -> m b
+runAmqp action = getAmqpConn >>= return . action
