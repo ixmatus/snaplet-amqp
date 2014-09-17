@@ -16,7 +16,8 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Reader
 import           Data.Configurator
 import           Data.Configurator.Types
-import           Network.AMQP               (Channel, Connection, openChannel,
+import           Network.AMQP               (Channel, Connection,
+                                             closeConnection, openChannel,
                                              openConnection')
 import           Network.Socket             (PortNumber (..))
 import           Paths_snaplet_amqp
@@ -41,7 +42,11 @@ instance MonadIO m => HasAmqpConn (ReaderT AmqpC m) where
 initAMQP :: SnapletInit b AmqpState
 initAMQP = makeSnaplet "amqp" description datadir $ do
     c <- mkSnapletAmqpConn
+
+    onUnload (closeConnection $ fst c)
+
     return $ AmqpState c
+
   where
     description = "Snaplet for AMQP library"
     datadir = Just $ liftM (++"/resources/amqp") getDataDir
