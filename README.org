@@ -1,4 +1,27 @@
-snaplet-amqp
-============
+* Welcome!
+  =snaplet-amqp= provides a convenience interface to the Haskell AMQP
+  package.
 
-A snaplet providing a convenience interface to the Haskell AMQP package.
+  #+BEGIN_SRC
+  import           Control.Lens
+  import           Snap
+  import           Snap.Snaplet
+  import           Snap.Snaplet.AMQP
+
+  data App = App
+      { _amqp    :: Snaplet AmqpState }
+
+  makeLenses ''App
+
+  instance HasAmqpConn (Handler b App) where
+      getAmqpConn = with amqp getAmqpConn
+
+  app :: SnapletInit App App
+  app = makeSnaplet "app" "An snaplet example application." Nothing $ do
+      a <- nestSnaplet "amqp" amqp initAMQP
+      addRoutes appRoutes -- Your routes, I haven't defined any here
+      return $ App a
+
+  handler = do
+      
+  #+END_SRC

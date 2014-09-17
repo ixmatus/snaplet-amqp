@@ -15,3 +15,6 @@ deps:
 
 test:
 	cabal test -w $(path)
+
+docs:
+	cabal haddock
