@@ -20,4 +20,4 @@ docs:
 	cabal haddock
 
 licenses:
-	rm -f DEPENDENCY-LICENSES && cabal-dependency-licenses > DEPENDENCY-LICENSES
+	rm -f DEPENDENCY-LICENSES.md && cabal-dependency-licenses > DEPENDENCY-LICENSES.md
