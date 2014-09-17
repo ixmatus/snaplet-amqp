@@ -25,6 +25,7 @@ description:
 
 Extra-source-files:
     LICENSE
+    DEPENDENCY-LICENSES
     README.org
 
 Library
