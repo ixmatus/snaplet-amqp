@@ -39,7 +39,7 @@ instance MonadIO m => HasAmqpConn (ReaderT AmqpC m) where
 
 -- | Initialize the AMQP Snaplet.
 initAMQP :: SnapletInit b AmqpState
-initAMQP = makeSnaplet "persist" description datadir $ do
+initAMQP = makeSnaplet "amqp" description datadir $ do
     c <- mkSnapletAmqpConn
     return $ AmqpState c
   where
