@@ -7,6 +7,7 @@
   import           Snap
   import           Snap.Snaplet
   import           Snap.Snaplet.AMQP
+  import Network.AMQP
 
   data App = App
       { _amqp    :: Snaplet AmqpState }
@@ -23,5 +24,9 @@
       return $ App a
 
   handler = do
-      
+      runAmqp \(_, chan) -> do
+        declareQueue chan newQueue {queueName = "myQueue"}
+        declareExchange chan newExchange {exchangeName = "myExchange", exchangeType = "direct"}
+        bindQueue chan "myQueue" "myExchange" "myKey"
+
   #+END_SRC
