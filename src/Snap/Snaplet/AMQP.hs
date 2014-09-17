@@ -22,7 +22,6 @@ import           Network.AMQP               (Channel, Connection,
                                              closeConnection,
                                              defaultConnectionOpts, openChannel,
                                              openConnection'', plain)
-import           Network.Socket             (PortNumber (..))
 import           Paths_snaplet_amqp
 import           Snap.Snaplet
 
