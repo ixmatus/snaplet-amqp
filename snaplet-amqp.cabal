@@ -1,5 +1,5 @@
 Name:                snaplet-amqp
-Version:             0.1.0.0
+Version:             0.1.2.0
 Synopsis:            Snap framework snaplet for the AMQP library
 Homepage:            https://github.com/ixmatus/snaplet-amqp
 License:             BSD3
@@ -19,6 +19,28 @@ description:
   `snaplet-amqp` is a snaplet for the Snap web framework providing
   convenience functions and state management for the Haskell AMQP
   package.
+  .
+  Below is an incomplete example.
+  .
+  @
+  import           Control.Lens
+  import           Snap
+  import           Snap.Snaplet
+  import           Snap.Snaplet.AMQP
+
+  data App = App
+      { _amqp    :: Snaplet AmqpState }
+
+  makeLenses ''App
+
+  instance HasAmqpConn (Handler b App) where
+      getAmqpConn = with amqp getAmqpConn
+
+  app :: SnapletInit App App
+  app = makeSnaplet "app" "An snaplet example application." Nothing $ do
+      a <- nestSnaplet "amqp" amqp initAMQP
+      addRoutes appRoutes -- Your routes, I haven't defined any here
+      return $ App a
 
 Extra-source-files:
     LICENSE
@@ -33,7 +55,7 @@ Library
     Snap.Snaplet.AMQP
 
   Other-Modules:
-    Snap.Snaplet.AMQP.Internal
+    Paths_snaplet_amqp
 
   Build-Depends:
     base                >= 4.4     && < 5,
@@ -41,8 +63,8 @@ Library
     amqp                >= 0.10    && < 0.11,
     transformers        >= 0.4     && < 0.5,
     configurator        >= 0.3     && < 0.4,
-    monads-tf           >= 0.1     && < 0.2,
-    network             >= 2.5     && < 2.6
+    network             >= 2.5     && < 2.6,
+    mtl                 >= 2       && < 3
 
 Source-Repository head
   Type:                 git

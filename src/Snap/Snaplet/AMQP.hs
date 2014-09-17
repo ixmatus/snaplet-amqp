@@ -8,7 +8,8 @@ module Snap.Snaplet.AMQP
   ( initAMQP
   , runAmqp
   , mkAmqpConn
-  , AmqpState (..)
+  , AmqpState   (..)
+  , HasAmqpConn (..)
   ) where
 
 import           Control.Monad.State
@@ -21,16 +22,17 @@ import           Network.Socket             (PortNumber (..))
 import           Paths_snaplet_amqp
 import           Snap.Snaplet
 
-import           Snap.Snaplet.AMQP.Internal
-
 -------------------------------------------------------------------------------
 type AmqpC = (Connection, Channel)
 
-newtype AmqpState = AmqpState { persistAmqp :: AmqpC }
+newtype AmqpState = AmqpState { amqpConn :: AmqpC }
 
 -------------------------------------------------------------------------------
 class MonadIO m => HasAmqpConn m where
     getAmqpConn :: m AmqpC
+
+instance HasAmqpConn (Handler b AmqpState) where
+    getAmqpConn = gets amqpConn
 
 instance MonadIO m => HasAmqpConn (ReaderT AmqpC m) where
     getAmqpConn = ask
