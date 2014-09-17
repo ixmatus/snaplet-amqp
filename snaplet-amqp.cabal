@@ -9,7 +9,7 @@ Maintainer:          parnell@digitalmentat.com
 Copyright:           (c) 2014 Parnell Springmeyer
 Category:            Web
 Build-type:          Simple
-Stability:           alpha
+Stability:           stable
 Bug-reports:         https://github.com/ixmatus/snaplet-amqp/issues
 Package-url:         http://hackage.haskell.org/package/snaplet-amqp
 Tested-with:         GHC == 7.6.3
@@ -30,7 +30,8 @@ Extra-source-files:
 Library
   Default-Language:     Haskell2010
   HS-Source-Dirs:       src
-  GHC-Options:          -Wall
+  Ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
+               -fno-warn-orphans -fno-warn-unused-do-bind
 
   Exposed-Modules:
     Snap.Snaplet.AMQP
