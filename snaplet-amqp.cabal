@@ -49,7 +49,7 @@ Library
     amqp                >= 0.10    && < 0.11,
     transformers        >= 0.4     && < 0.5,
     configurator        >= 0.3     && < 0.4,
-    network             >= 2.5     && < 2.6,
+    network             >= 2.5     && < 2.7,
     mtl                 >= 2       && < 3
 
 Source-Repository head
