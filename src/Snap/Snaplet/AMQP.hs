@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds   #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -5,13 +6,13 @@
 
 module Snap.Snaplet.AMQP
   ( initAMQP
-  , AmqpState
+  , runAmqp
+  , mkAmqpConn
+  , AmqpState (..)
   ) where
 
-import           Control.Monad.IO.Class
-import           Control.Monad.Reader
-import           Control.Monad.State        (gets)
-import           Control.Monad.Trans.Reader as R
+import           Control.Monad.State
+import           Control.Monad.Trans.Reader
 import           Data.Configurator
 import           Data.Configurator.Types
 import           Network.AMQP               (Channel, Connection, openChannel,
@@ -28,16 +29,11 @@ type AmqpC = (Connection, Channel)
 newtype AmqpState = AmqpState { persistAmqp :: AmqpC }
 
 -------------------------------------------------------------------------------
--- | Implement this type class to have any monad work with snaplet-persistent.
--- A default instance is provided for (Handler b PersistState).
 class MonadIO m => HasAmqpConn m where
     getAmqpConn :: m AmqpC
 
-instance HasAmqpConn (Handler b AmqpState) where
-    getAmqpConn = gets persistAmqp
-
 instance MonadIO m => HasAmqpConn (ReaderT AmqpC m) where
-    getAmqpConn = R.ask
+    getAmqpConn = ask
 
 -- | Initialize the AMQP Snaplet.
 initAMQP :: SnapletInit b AmqpState
