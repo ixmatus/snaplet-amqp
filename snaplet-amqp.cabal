@@ -28,6 +28,9 @@ Extra-source-files:
     DEPENDENCY-LICENSES.md
     README.org
 
+Data-files:
+    resources/amqp/devel.cfg
+
 Library
   Default-Language:     Haskell2010
   HS-Source-Dirs:       src
