@@ -1,8 +1,9 @@
-{-# LANGUAGE ConstraintKinds   #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 module Snap.Snaplet.AMQP
   ( initAMQP
@@ -17,8 +18,10 @@ import           Control.Monad.Trans.Reader
 import           Data.Configurator
 import           Data.Configurator.Types
 import           Network.AMQP               (Channel, Connection,
-                                             closeConnection, openChannel,
-                                             openConnection')
+                                             ConnectionOpts (..),
+                                             closeConnection,
+                                             defaultConnectionOpts, openChannel,
+                                             openConnection'', plain)
 import           Network.Socket             (PortNumber (..))
 import           Paths_snaplet_amqp
 import           Snap.Snaplet
@@ -68,7 +71,13 @@ mkAmqpConn conf = do
   login <- liftIO $ require conf "login"
   pass  <- liftIO $ require conf "password"
 
-  conn  <- liftIO $ openConnection' host (PortNum port) vhost login pass
+  let connOpts = defaultConnectionOpts
+                   { coServers = [(host, (fromInteger port))]
+                   , coVHost   = vhost
+                   , coAuth    = [plain login pass]
+                   }
+
+  conn  <- liftIO $ openConnection'' connOpts
   chan  <- liftIO $ openChannel conn
 
   return (conn, chan)
