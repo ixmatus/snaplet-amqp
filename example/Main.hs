@@ -38,16 +38,16 @@ fooHandler = do
     _ <- runAmqp $ \(_, chan) -> do
         _ <- declareQueue chan newQueue {queueName = serverQueue}
 
-        declareExchange chan newExchange {exchangeName = exchange', exchangeType = "headers"}
-        bindQueue       chan serverQueue exchange' routingKey
+        declareExchange chan newExchange { exchangeName = exchange'
+                                         , exchangeType = "headers"
+                                         }
+        bindQueue chan serverQueue exchange' routingKey
 
-        -- Update all dimmers in the group with the NEW group configuration
         publishMsg chan exchange' routingKey
             newMsg {msgBody = "AMQP Snaplet!",
                     msgDeliveryMode = Just Persistent}
 
     modifyResponse $ setResponseCode 204
-
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
@@ -56,7 +56,6 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     m <- nestSnaplet "amqp" amqp $ initAMQP
     addRoutes routes
     return $ App m
-
 
 main :: IO ()
 main = serveSnaplet defaultConfig app
