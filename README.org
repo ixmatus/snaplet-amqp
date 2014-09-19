@@ -1,4 +1,6 @@
 * Welcome!
+  [[https://drone.io/github.com/ixmatus/snaplet-amqp/latest][https://drone.io/github.com/ixmatus/snaplet-amqp/status.png]]
+  
   =snaplet-amqp= provides a convenience interface to the Haskell AMQP
   package.
 
