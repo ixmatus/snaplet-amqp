@@ -1,4 +1,4 @@
-* Welcome!
+* Welcome! [[https://budueba.com/hackage/snaplet-amqp][https://hackage.haskell.org/package/snaplet-amqp]]
   [[https://drone.io/github.com/ixmatus/snaplet-amqp/latest][https://drone.io/github.com/ixmatus/snaplet-amqp/status.png]]
   
   =snaplet-amqp= provides a convenience interface to the Haskell AMQP
