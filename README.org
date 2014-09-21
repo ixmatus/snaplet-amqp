@@ -1,6 +1,6 @@
 * Welcome!
   [[https://hackage.haskell.org/package/snaplet-amqp][https://img.shields.io/hackage/v/snaplet-amqp.svg?style=flat]]
-  [[https://drone.io/github.com/ixmatus/snaplet-amqp/latest][https://drone.io/github.com/ixmatus/snaplet-amqp/status.png]]
+  [[https://travis-ci.org/ixmatus/snaplet-amqp][https://travis-ci.org/ixmatus/snaplet-amqp.svg?branch=master]]
   
   =snaplet-amqp= provides a convenience interface to the Haskell AMQP
   package.
