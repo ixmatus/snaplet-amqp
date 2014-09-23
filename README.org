@@ -5,6 +5,14 @@
   =snaplet-amqp= provides a convenience interface to the Haskell AMQP
   package.
 
+  Because the AMQP package doesn't provide its own connection pooling
+  mechanism, this snaplet uses the =resource-pool= package to create a
+  pool of ten connections (only connections, not channels).
+
+  When the =runAmqp= function is used a connection from the pool is
+  leased, a channel is created and both the connection and channel are
+  applied to the supplied action.
+
   #+BEGIN_SRC
   {-# LANGUAGE FlexibleInstances #-}
   {-# LANGUAGE OverloadedStrings #-}
