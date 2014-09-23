@@ -8,15 +8,16 @@
 module Snap.Snaplet.AMQP
   ( initAMQP
   , runAmqp
-  , mkAmqpConn
+  , mkAmqpPool
   , AmqpState   (..)
-  , HasAmqpConn (..)
+  , HasAmqpPool (..)
   ) where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Reader
 import           Data.Configurator
 import           Data.Configurator.Types
+import           Data.Pool
 import           Network.AMQP               (Channel, Connection,
                                              ConnectionOpts (..),
                                              closeConnection,
@@ -26,26 +27,26 @@ import           Paths_snaplet_amqp
 import           Snap.Snaplet
 
 -------------------------------------------------------------------------------
-type AmqpC = (Connection, Channel)
+type AmqpPool = Pool Connection
 
-newtype AmqpState = AmqpState { amqpConn :: AmqpC }
+newtype AmqpState = AmqpState { amqpPool :: AmqpPool }
 
 -------------------------------------------------------------------------------
-class MonadIO m => HasAmqpConn m where
-    getAmqpConn :: m AmqpC
+class MonadIO m => HasAmqpPool m where
+    getAmqpPool :: m AmqpPool
 
-instance HasAmqpConn (Handler b AmqpState) where
-    getAmqpConn = gets amqpConn
+instance HasAmqpPool (Handler b AmqpState) where
+    getAmqpPool = gets amqpPool
 
-instance MonadIO m => HasAmqpConn (ReaderT AmqpC m) where
-    getAmqpConn = ask
+instance MonadIO m => HasAmqpPool (ReaderT AmqpPool m) where
+    getAmqpPool = ask
 
 -- | Initialize the AMQP Snaplet.
 initAMQP :: SnapletInit b AmqpState
 initAMQP = makeSnaplet "amqp" description datadir $ do
-    c <- mkSnapletAmqpConn
+    c <- mkSnapletAmqpPoolonn
 
-    onUnload (closeConnection $ fst c)
+    -- onUnload (closeConnection $ fst c)
 
     return $ AmqpState c
 
@@ -55,15 +56,15 @@ initAMQP = makeSnaplet "amqp" description datadir $ do
 
 -------------------------------------------------------------------------------
 -- | Constructs a connection in a snaplet context.
-mkSnapletAmqpConn :: (MonadIO (m b v), MonadSnaplet m) => m b v AmqpC
-mkSnapletAmqpConn = do
+mkSnapletAmqpPoolonn :: (MonadIO (m b v), MonadSnaplet m) => m b v AmqpPool
+mkSnapletAmqpPoolonn = do
   conf <- getSnapletUserConfig
-  mkAmqpConn conf
+  mkAmqpPool conf
 
 -------------------------------------------------------------------------------
 -- | Constructs a connect from Config.
-mkAmqpConn :: MonadIO m => Config -> m AmqpC
-mkAmqpConn conf = do
+mkAmqpPool :: MonadIO m => Config -> m AmqpPool
+mkAmqpPool conf = do
   host  <- liftIO $ require conf "host"
   port  <- liftIO $ require conf "port"
   vhost <- liftIO $ require conf "vhost"
@@ -75,13 +76,13 @@ mkAmqpConn conf = do
                    , coVHost   = vhost
                    , coAuth    = [plain login pass]
                    }
-
-  conn  <- liftIO $ openConnection'' connOpts
-  chan  <- liftIO $ openChannel conn
-
-  return (conn, chan)
+  return =<< liftIO $ createPool (openConnection'' connOpts) closeConnection 1 30 10
 
 -------------------------------------------------------------------------------
--- | Runs an AMQP action in any monad with a HasAmqpConn instance.
-runAmqp :: (HasAmqpConn m) => (AmqpC -> b) -> m b
-runAmqp action = getAmqpConn >>= return . action
+-- | Runs an AMQP action in any monad with a HasAmqpPoolonn instance.
+runAmqp :: (HasAmqpPool m) => ((Connection, Channel) -> b) -> m b
+runAmqp action = do
+    pool <- getAmqpPool
+    return =<< liftIO $ withResource pool $ \conn -> do
+        chan <- openChannel conn
+        return $ action (conn, chan)

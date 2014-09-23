@@ -19,8 +19,8 @@ data App = App
 
 makeLenses ''App
 
-instance HasAmqpConn (Handler b App) where
-    getAmqpConn = with amqp getAmqpConn
+instance HasAmqpPool (Handler b App) where
+    getAmqpPool = with amqp getAmqpPool
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
