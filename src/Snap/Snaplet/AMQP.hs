@@ -44,11 +44,11 @@ instance MonadIO m => HasAmqpPool (ReaderT AmqpPool m) where
 -- | Initialize the AMQP Snaplet.
 initAMQP :: SnapletInit b AmqpState
 initAMQP = makeSnaplet "amqp" description datadir $ do
-    c <- mkSnapletAmqpPoolonn
+    p <- mkSnapletAmqpPool
 
-    -- onUnload (closeConnection $ fst c)
+    onUnload (destroyAllResources p)
 
-    return $ AmqpState c
+    return $ AmqpState p
 
   where
     description = "Snaplet for AMQP library"
@@ -56,8 +56,8 @@ initAMQP = makeSnaplet "amqp" description datadir $ do
 
 -------------------------------------------------------------------------------
 -- | Constructs a connection in a snaplet context.
-mkSnapletAmqpPoolonn :: (MonadIO (m b v), MonadSnaplet m) => m b v AmqpPool
-mkSnapletAmqpPoolonn = do
+mkSnapletAmqpPool :: (MonadIO (m b v), MonadSnaplet m) => m b v AmqpPool
+mkSnapletAmqpPool = do
   conf <- getSnapletUserConfig
   mkAmqpPool conf
 
