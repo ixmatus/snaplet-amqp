@@ -1,9 +1,10 @@
-{-# LANGUAGE ConstraintKinds     #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Snap.Snaplet.AMQP
   ( initAMQP
@@ -18,11 +19,7 @@ import           Control.Monad.Trans.Reader
 import           Data.Configurator
 import           Data.Configurator.Types
 import           Data.Pool
-import           Network.AMQP               (Channel, Connection,
-                                             ConnectionOpts (..),
-                                             closeConnection,
-                                             defaultConnectionOpts, openChannel,
-                                             openConnection'', plain)
+import           Network.AMQP
 import           Paths_snaplet_amqp
 import           Snap.Snaplet
 
@@ -80,9 +77,9 @@ mkAmqpPool conf = do
 
 -------------------------------------------------------------------------------
 -- | Runs an AMQP action in any monad with a HasAmqpPoolonn instance.
-runAmqp :: (HasAmqpPool m) => ((Connection, Channel) -> b) -> m b
+runAmqp :: (HasAmqpPool m) => (Connection -> Channel -> IO ()) -> m ()
 runAmqp action = do
     pool <- getAmqpPool
-    return =<< liftIO $ withResource pool $ \conn -> do
-        chan <- openChannel conn
-        return $ action (conn, chan)
+    liftIO $ withResource pool $! \conn -> do
+        chan <- liftIO $ openChannel conn
+        liftIO $! action conn chan
