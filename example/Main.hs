@@ -35,7 +35,7 @@ fooHandler = do
         exchange'   = "myExchange"
         routingKey  = "myKey"
 
-    _ <- runAmqp $ \(_, chan) -> do
+    _ <- runAmqp $ \_ chan -> do
         _ <- declareQueue chan newQueue {queueName = serverQueue}
 
         declareExchange chan newExchange { exchangeName = exchange'
