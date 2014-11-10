@@ -24,7 +24,7 @@ import           Paths_snaplet_amqp
 import           Snap.Snaplet
 
 -------------------------------------------------------------------------------
-type AmqpPool = Pool Connection
+type AmqpPool = Pool (Connection, Channel)
 
 newtype AmqpState = AmqpState { amqpPool :: AmqpPool }
 
@@ -73,13 +73,17 @@ mkAmqpPool conf = do
                    , coVHost   = vhost
                    , coAuth    = [plain login pass]
                    }
-  return =<< liftIO $ createPool (openConnection'' connOpts) closeConnection 1 30 10
+      conn' = do
+        c <- openConnection'' connOpts
+        chan <- openChannel c
+        return (c, chan)
+  return =<< liftIO $ createPool conn' (\(c,_) -> closeConnection c) 1 30 10
+
 
 -------------------------------------------------------------------------------
 -- | Runs an AMQP action in any monad with a HasAmqpPoolonn instance.
 runAmqp :: (HasAmqpPool m) => (Connection -> Channel -> IO ()) -> m ()
 runAmqp action = do
     pool <- getAmqpPool
-    liftIO $ withResource pool $! \conn -> do
-        chan <- liftIO $ openChannel conn
+    liftIO $ withResource pool $! \(conn, chan) -> do
         liftIO $! action conn chan
