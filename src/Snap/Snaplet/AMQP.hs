@@ -24,7 +24,7 @@ import           Paths_snaplet_amqp
 import           Snap.Snaplet
 
 -------------------------------------------------------------------------------
-type AmqpPool = Pool Connection
+type AmqpPool = Pool Channel
 
 newtype AmqpState = AmqpState { amqpPool :: AmqpPool }
 
@@ -41,9 +41,11 @@ instance MonadIO m => HasAmqpPool (ReaderT AmqpPool m) where
 -- | Initialize the AMQP Snaplet.
 initAMQP :: SnapletInit b AmqpState
 initAMQP = makeSnaplet "amqp" description datadir $ do
-    p <- mkSnapletAmqpPool
+    (p, c) <- mkSnapletAmqpPool
 
+    -- Cleanup
     onUnload (destroyAllResources p)
+    onUnload (closeConnection c)
 
     return $ AmqpState p
 
@@ -60,7 +62,7 @@ mkSnapletAmqpPool = do
 
 -------------------------------------------------------------------------------
 -- | Constructs a connect from Config.
-mkAmqpPool :: MonadIO m => Config -> m AmqpPool
+mkAmqpPool :: MonadIO m => Config -> m (AmqpPool, Connection)
 mkAmqpPool conf = do
   host  <- liftIO $ require conf "host"
   port  <- liftIO $ require conf "port"
@@ -73,13 +75,16 @@ mkAmqpPool conf = do
                    , coVHost   = vhost
                    , coAuth    = [plain login pass]
                    }
-  return =<< liftIO $ createPool (openConnection'' connOpts) closeConnection 1 30 10
+
+  conn <- openConnection'' connOpts
+  chp  <- liftIO $ createPool (openChannel conn) closeChannel 1 30 10
+
+  return (chp, conn)
 
 -------------------------------------------------------------------------------
 -- | Runs an AMQP action in any monad with a HasAmqpPoolonn instance.
-runAmqp :: (HasAmqpPool m) => (Connection -> Channel -> IO ()) -> m ()
+runAmqp :: (HasAmqpPool m) => (Channel -> IO ()) -> m ()
 runAmqp action = do
     pool <- getAmqpPool
-    liftIO $ withResource pool $! \conn -> do
-        chan <- liftIO $ openChannel conn
-        liftIO $! action conn chan
+    liftIO $ withResource pool $! \chan -> do
+        liftIO $! action chan
