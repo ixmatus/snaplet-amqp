@@ -76,7 +76,7 @@ mkAmqpPool conf = do
                    , coAuth    = [plain login pass]
                    }
 
-  conn <- openConnection'' connOpts
+  conn <- liftIO $ openConnection'' connOpts
   chp  <- liftIO $ createPool (openChannel conn) closeChannel 1 30 10
 
   return (chp, conn)
