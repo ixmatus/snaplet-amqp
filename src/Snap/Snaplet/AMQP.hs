@@ -55,7 +55,7 @@ initAMQP = makeSnaplet "amqp" description datadir $ do
 
 -------------------------------------------------------------------------------
 -- | Constructs a connection in a snaplet context.
-mkSnapletAmqpPool :: (MonadIO (m b v), MonadSnaplet m) => m b v AmqpPool
+mkSnapletAmqpPool :: (MonadIO (m b v), MonadSnaplet m) => m b v (AmqpPool, Connection)
 mkSnapletAmqpPool = do
   conf <- getSnapletUserConfig
   mkAmqpPool conf
