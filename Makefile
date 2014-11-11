@@ -1,5 +1,5 @@
 prog = ghc
-path = /usr/bin/ghc-7.6.3
+path = /usr/local/bin/ghc-7.8.3
 
 tags:
 	hasktags --etags --output='TAGS' *
