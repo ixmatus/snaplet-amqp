@@ -1,5 +1,5 @@
 Name:                snaplet-amqp
-Version:             1.0.1.2
+Version:             1.1.0.0
 Synopsis:            Snap framework snaplet for the AMQP library
 Homepage:            https://github.com/ixmatus/snaplet-amqp
 License:             BSD3
